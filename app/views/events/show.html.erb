@@ -1,0 +1,211 @@
+<% content_for :title, @event.title %>
+
+<div class="max-w-4xl mx-auto">
+  <!-- Back Link -->
+  <%= link_to events_path, class: "inline-flex items-center text-gray-600 hover:text-amber-600 mb-6 transition-colors" do %>
+    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to events
+  <% end %>
+
+  <div class="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-amber-100 shadow-xl">
+    <!-- Hero Section -->
+    <div class="h-64 relative group">
+      <%= image_tag @event.banner_path, class: "w-full h-full object-cover" %>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+      
+      <% if @event.capacity %>
+        <div class="absolute top-4 right-4 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-amber-700 font-semibold shadow-lg">
+          <span class="text-2xl"><%= @event.rsvps.confirmed.count %></span>/<%= @event.capacity %> attending
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Content -->
+    <div class="p-8">
+      <!-- Date & Time Badge -->
+      <div class="inline-flex items-center px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-medium mb-4">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <%= @event.date.strftime("%A, %B %d, %Y at %I:%M %p") %>
+      </div>
+
+      <h1 class="text-3xl font-bold text-gray-800 mb-4"><%= @event.title %></h1>
+
+      <!-- Host Info -->
+      <% if @event.user %>
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+            <%= @event.user.username.first.upcase %>
+          </div>
+          <div>
+            <p class="text-gray-800 font-medium">Hosted by <%= @event.user.username %></p>
+            <p class="text-gray-500 text-sm"><%= @event.user.email %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Location -->
+      <div class="flex items-start mb-6 p-4 bg-gray-50 rounded-xl">
+        <svg class="w-6 h-6 text-amber-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <div>
+          <p class="text-gray-800 font-medium">Location</p>
+          <p class="text-gray-600"><%= @event.location %></p>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <% if @event.description.present? %>
+        <div class="mb-8">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">About this Iftar</h3>
+          <p class="text-gray-600 whitespace-pre-wrap"><%= @event.description %></p>
+        </div>
+      <% end %>
+
+      <!-- RSVP Status Badge -->
+      <% if @event.rsvp_closes_before %>
+        <div class="flex items-center gap-2 mb-4">
+          <% if @event.rsvp_open? %>
+            <span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              RSVP Open
+            </span>
+            <span class="text-sm text-gray-500">Closes <%= time_ago_in_words(@event.rsvp_closes_at) %> before event</span>
+          <% else %>
+            <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              RSVP Closed
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- RSVP Section -->
+      <div class="border-t border-gray-100 pt-6">
+        <% if logged_in? %>
+          <% user_rsvp = current_user.rsvps.find_by(event: @event) %>
+          <% if user_rsvp %>
+            <div class="flex items-center justify-between p-4 bg-green-50 rounded-xl mb-4">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-green-800 font-medium">You're attending this Iftar!</span>
+              </div>
+              <%= button_to "Cancel RSVP", event_rsvp_path(@event), method: :delete, class: "text-red-600 hover:text-red-700 font-medium transition-colors cursor-pointer" %>
+            </div>
+          <% elsif !@event.rsvp_open? %>
+            <div class="p-4 bg-red-50 rounded-xl text-red-800 mb-4">
+              <p class="font-medium">RSVPs for this event are now closed</p>
+              <p class="text-sm mt-1">The deadline was <%= @event.rsvp_closes_before %> hours before the event</p>
+            </div>
+          <% elsif @event.full? %>
+            <div class="p-4 bg-amber-50 rounded-xl text-amber-800">
+              <p class="font-medium">This event is at full capacity</p>
+              <p class="text-sm mt-1">Check back later for cancellations</p>
+            </div>
+          <% else %>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <%= button_to event_rsvp_path(@event, status: :confirmed), method: :post, class: "flex-1 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg cursor-pointer" do %>
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                RSVP - I'll be there!
+              <% end %>
+              <%= button_to event_rsvp_path(@event, status: :declined), method: :post, class: "px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-medium hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer" do %>
+                Can't make it
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="p-4 bg-gray-50 rounded-xl">
+            <p class="text-gray-600">
+              <%= link_to "Login", login_path, class: "text-amber-600 hover:text-amber-700 font-medium" %> or 
+              <%= link_to "Sign up", signup_path, class: "text-amber-600 hover:text-amber-700 font-medium" %> to RSVP for this event.
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Attendees Section -->
+      <% if @event.rsvps.confirmed.any? %>
+        <div class="border-t border-gray-100 pt-6 mt-6">
+          <% is_event_manager = logged_in? && (current_user.admin? || current_user == @event.user) %>
+          
+          <% if is_event_manager %>
+            <!-- Host/Admin view: Full attendee list with cancel buttons -->
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Manage Attendees (<%= @event.rsvps.confirmed.count %><%= @event.capacity ? "/#{@event.capacity}" : "" %>)</h3>
+            <div class="space-y-2">
+              <% @event.rsvps.confirmed.includes(:user).each do |rsvp| %>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-semibold mr-3">
+                      <%= rsvp.user.username.first.upcase %>
+                    </div>
+                    <div>
+                      <span class="font-medium text-gray-800"><%= rsvp.user.username %></span>
+                      <span class="text-gray-400 text-sm ml-2"><%= rsvp.user.email %></span>
+                    </div>
+                  </div>
+                  <%= button_to event_cancel_rsvp_path(@event, rsvp), 
+                      method: :delete,
+                      data: { turbo_confirm: "Remove #{rsvp.user.username} from this event?" },
+                      class: "text-red-500 hover:text-red-700 text-sm font-medium cursor-pointer" do %>
+                    Remove
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <!-- Guest view: Only show count, not names -->
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Attendees</h3>
+            <div class="flex items-center p-4 bg-gray-50 rounded-xl">
+              <div class="flex -space-x-2 mr-4">
+                <% 4.times do |i| %>
+                  <div class="w-8 h-8 bg-gradient-to-br from-amber-<%= 300 + i * 100 %> to-orange-<%= 400 + i * 100 %> rounded-full border-2 border-white flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                <% end %>
+              </div>
+              <div>
+                <span class="text-2xl font-bold text-gray-800"><%= @event.rsvps.confirmed.count %></span>
+                <span class="text-gray-600"><%= @event.capacity ? " / #{@event.capacity}" : "" %> guests attending</span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Admin/Host Actions -->
+      <% if logged_in? && (current_user.admin? || current_user == @event.user) %>
+        <div class="border-t border-gray-100 pt-6 mt-6">
+          <div class="flex flex-wrap gap-3">
+            <%= link_to edit_event_path(@event), class: "inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors" do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Event
+            <% end %>
+            <%= button_to @event, method: :delete, class: "inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors cursor-pointer", data: { turbo_confirm: "Are you sure you want to delete this event?" } do %>
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Event
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
